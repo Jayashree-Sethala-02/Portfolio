@@ -880,7 +880,7 @@ tr:hover td { background: var(--gray1); }
           <div class="card-title">Drift Results — All Asset Classes</div>
           <div class="card-sub">// SQL running against Gold layer · sorted by severity</div>
         </div>
-        <button class="btn btn-outline" onclick="runDrift()" style="font-size:11px">↺ Re-run</button>
+        <button class="btn btn-outline" onclick="driftResults = runDrift(); renderDriftTable();" style="font-size:11px">↺ Re-run</button>
       </div>
       <div id="drift-table-wrap">
         <div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Run the pipeline first — drift detection runs automatically</div></div>
@@ -1541,7 +1541,7 @@ if(bg) { bg.textContent = `${goldCount} rows`; bg.className = 'nav-badge nb-blue
     renderAllTables();
     loadAIContext();
 
-    setStatus('ready', '✅ Pipeline complete');
+    setStatus('ready', '● Markets Open');
 
   } catch(err) {
     appendLog(log, 'err', `❌ Pipeline error: ${err.message}`);
@@ -2094,7 +2094,7 @@ if(bp2) { bp2.textContent = 'READY'; bp2.className = 'nav-badge nb-gold'; }
   document.getElementById('drift-table-wrap').innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Run the pipeline first</div></div>';
   document.getElementById('pipeline-results').innerHTML = '<div class="empty"><div class="empty-icon">⚙️</div><div class="empty-text">Run the pipeline to see results</div></div>';
 
-  setStatus('ready', '✅ Database ready');
+  setStatus('ready', '● Markets Open');
 }
 
 // Simple promise-based sleep function for pipeline timing
