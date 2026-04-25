@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Probity Advisors — Portfolio Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+<style>
+/* ============================================================
+   DESIGN SYSTEM
+   Colors match Probity's website: navy, gold, white
+   ============================================================ */
+:root {
+  --navy:    #1a3057;
+  --navy2:   #243f6e;
+  --navy3:   #0f1e38;
+  --gold:    #b8892a;
+  --gold2:   #d4a84b;
+  --bg:      #e8eff8;
+  --white:   #ffffff;
+  --gray1:   #f5f7fb;
+  --gray2:   #e8eef6;
+  --gray3:   #c5cdd8;
+  --gray4:   #8a96a8;
+  --text:    #1a2535;
+  --muted:   #6b7a8d;
+  --green:   #2a7d4f;
+  --green2:  #e8f5ee;
+  --red:     #b83232;
+  --red2:    #fdeaea;
+  --amber:   #9a6c10;
+  --amber2:  #fff8e6;
+  --blue:    #1a4f8a;
+  --blue2:   #e8f0fb;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Lato', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+  --shadow-sm: 0 1px 3px rgba(26,48,87,0.08);
+  --shadow-md: 0 4px 12px rgba(26,48,87,0.1);
+  --shadow-lg: 0 8px 24px rgba(26,48,87,0.14);
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar {background: #1e3a6a; border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 200; box-shadow: var(--shadow-md); }
+.topbar-inner { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; ... }
+.logo-wrap { display: flex; align-items: center; gap: 12px; }
+.logo-emblem { width: 38px; height: 38px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 14px; color: var(--navy); font-weight: 700; font-style: italic; flex-shrink: 0; }
+.logo-name { font-family: var(--font-display); font-size: 16px; color: #fff; font-weight: 600; }
+.logo-tag { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.status-pill { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-family: var(--font-mono); border: 1px solid; }
+.status-loading { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
+.status-ready   { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.85); }
+.status-running { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.live-dot.pulse { animation: blink 1.5s infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+/* ============================================================
+   LAYOUT — Sidebar + Content
+   ============================================================ */
+.layout { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 67px); }
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar { background: #1e3a6a;border-right: none; padding: 1.25rem 1rem; position: sticky; top: 67px; height: calc(100vh - 67px); overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.sidebar-section { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.12em; padding: 0.75rem 0.6rem 0.4rem; margin-top: 0.75rem; }.nav-item { display: flex; align-items: center; gap: 10px; padding: 0.55rem 0.75rem; border-radius: 6px; cursor: pointer; border: none; background: transparent; width: 100%; text-align: left; font-family: var(--font-body); transition: all 0.15s; }
+.nav-item:hover { background: rgba(255,255,255,0.12); }
+.nav-item.active { background: rgba(184,137,42,0.2); border-left: 3px solid var(--gold); padding-left: calc(0.75rem - 3px); }
+.nav-icon { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.nav-label { font-size: 12.5px; font-weight: 500; color:white; }
+.nav-item.active .nav-label { color: var(--gold2); font-weight: 600; }
+.nav-badge { margin-left: auto; font-size: 10px; font-family: var(--font-mono); padding: 1px 6px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+.nb-gray { background: var(--gray2); color: var(--muted); }
+.nb-green { background: var(--green2); color: var(--green); }
+.nb-red { background: var(--red2); color: var(--red); }
+.nb-gold { background: var(--amber2); color: var(--amber); }
+.nb-blue { background: var(--blue2); color: var(--blue); }
+
+/* ============================================================
+   CONTENT AREA
+   ============================================================ */
+.content { padding: 1.5rem; overflow-y: auto; max-width: 1300px; }
+.page { display: none; animation: fadeUp 0.4s ease; }
+.page.active { display: block; }
+@keyframes fadeUp { from{opacity:0;transform:translateX(12px)} to{opacity:1;transform:translateX(0)} }
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+.page-header { margin-bottom: 1.25rem; }
+.page-eyebrow { font-size: 11px; color: var(--gold); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+.page-title { font-family: var(--font-display); font-size: 24px; color: var(--navy); margin-bottom: 4px; font-style: normal; font-weight: 600; }
+.page-sub { font-size: 12px; color: var(--muted); line-height: 1.6; letter-spacing: 0.03em; font-weight: 400; }
+
+/* ============================================================
+   METRICS ROW
+   ============================================================ */
+.metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.85rem; margin-bottom: 1.1rem; }
+.metric { background: var(--white); border: 1px solid var(--gray2); border-radius: var(--radius); padding: 1rem 1.1rem; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+.metric-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.metric-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: 0.4rem; }
+.metric-value { font-family: var(--font-mono); font-size: 22px; color: var(--navy); font-weight: 500; margin-bottom: 2px; }
+.metric-sub { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card { background: var(--white); border: 1px solid var(--gray2); border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; box-shadow: var(--shadow-sm); }
+.card-head { padding: 0.8rem 1.1rem; border-bottom: 1px solid var(--gray2); background: var(--gray1); display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+.card-title { font-size: 13px; font-weight: 600; color: var(--navy); }
+.card-sub { font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 1px; }
+.card-body { padding: 1.1rem; }
+
+/* ============================================================
+   GRID LAYOUTS
+   ============================================================ */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.grid-3-2 { display: grid; grid-template-columns: 3fr 2fr; gap: 1rem; }
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn { padding: 7px 16px; border-radius: 6px; border: none; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn-primary { background: var(--navy); color: white; }
+.btn-primary:hover:not(:disabled) { background: var(--navy2); }
+.btn-gold { background: var(--gold); color: white; }
+.btn-gold:hover:not(:disabled) { background: var(--gold2); }
+.btn-outline { background: transparent; color: var(--navy); border: 1px solid var(--gray3); }
+.btn-outline:hover:not(:disabled) { background: var(--gray1); }
+.btn-green { background: var(--green); color: white; }
+.btn-green:hover:not(:disabled) { background: #235f3c; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.8s linear infinite; display: inline-block; }
+
+/* ============================================================
+   PIPELINE STAGES
+   ============================================================ */
+.pipeline-wrap { display: flex; align-items: stretch; gap: 0; overflow-x: auto; margin: 1rem 0; }
+.stage { flex: 1; min-width: 110px; background: var(--gray1); border: 1.5px solid var(--gray2); padding: 0.85rem 0.75rem; text-align: center; position: relative; transition: all 0.4s; }
+.stage:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.stage:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+.stage + .stage { border-left: none; }
+.stage.waiting { background: var(--gray1); border-color: var(--gray2); }
+.stage.running { background: var(--amber2); border-color: var(--gold); }
+.stage.done { background: var(--green2); border-color: var(--green); }
+.stage.error { background: var(--red2); border-color: var(--red); }
+.stage-icon { font-size: 22px; margin-bottom: 4px; }
+.stage-name { font-size: 11px; font-weight: 700; color: var(--navy); letter-spacing: 0.02em; }
+.stage-status { font-size: 10px; color: var(--muted); margin-top: 2px; font-family: var(--font-mono); }
+.stage-count { font-size: 11px; color: var(--green); font-family: var(--font-mono); font-weight: 500; margin-top: 3px; min-height: 16px; }
+.stage-arrow { position: absolute; right: -13px; top: 50%; transform: translateY(-50%); z-index: 2; width: 24px; height: 24px; background: var(--white); border: 1.5px solid var(--gray2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--gold); font-weight: 700; }
+
+/* ============================================================
+   LOG TERMINAL
+   ============================================================ */
+.log { font-family: var(--font-mono); font-size: 11.5px; background: var(--navy3); border-radius: 6px; padding: 0.85rem; line-height: 1.9; height: 220px; overflow-y: auto; border: 1px solid var(--navy2); }
+.log::-webkit-scrollbar { width: 4px; }
+.log::-webkit-scrollbar-thumb { background: var(--navy2); border-radius: 2px; }
+.l-time { color: #3d5a8a; }
+.l-info { color: #7aa8ff; }
+.l-sql  { color: #c4a8f8; }
+.l-data { color: #7dd8a0; }
+.l-warn { color: #f5c97a; }
+.l-err  { color: #f07878; }
+.l-ok   { color: #7dd8a0; }
+.l-ai   { color: var(--gold2); }
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th { padding: 7px 12px; text-align: left; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; border-bottom: 1px solid var(--gray2); background: var(--gray1); white-space: nowrap; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--gray2); color: var(--text); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--gray1); }
+.mono { font-family: var(--font-mono); font-size: 11.5px; }
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.b-green { background: var(--green2); color: var(--green); }
+.b-red   { background: var(--red2);   color: var(--red); }
+.b-gold  { background: var(--amber2); color: var(--amber); }
+.b-blue  { background: var(--blue2);  color: var(--blue); }
+.b-navy  { background: rgba(26,48,87,0.08); color: var(--navy); }
+.b-gray  { background: var(--gray2);  color: var(--muted); }
+
+/* ============================================================
+   DRIFT BARS
+   ============================================================ */
+.drift-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.drift-track { flex: 1; height: 8px; background: var(--gray2); border-radius: 4px; overflow: hidden; }
+.drift-fill { height: 8px; border-radius: 4px; transition: width 0.6s; }
+.drift-num { font-family: var(--font-mono); font-size: 11px; min-width: 42px; text-align: right; font-weight: 600; }
+
+/* ============================================================
+   ALERTS
+   ============================================================ */
+.alert { display: flex; gap: 10px; padding: 0.75rem 1rem; border-radius: var(--radius); border-left: 4px solid; margin-bottom: 0.85rem; font-size: 13px; line-height: 1.6; }
+.alert-blue   { background: var(--blue2);   border-color: var(--blue); }
+.alert-green  { background: var(--green2);  border-color: var(--green); }
+.alert-gold   { background: var(--amber2);  border-color: var(--gold); }
+.alert-red    { background: var(--red2);    border-color: var(--red); }
+
+/* ============================================================
+   STAT ROWS
+   ============================================================ */
+.stat-row { display: flex; justify-content: space-between; padding: 0.55rem 0; border-bottom: 1px solid var(--gray2); font-size: 12.5px; }
+.stat-row:last-child { border-bottom: none; }
+.stat-key { color: var(--muted); }
+.stat-val { font-family: var(--font-mono); color: var(--navy); font-weight: 500; }
+
+/* ============================================================
+   PROGRESS BARS
+   ============================================================ */
+.prog-wrap { margin-bottom: 0.85rem; }
+.prog-label-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.prog-label { color: var(--muted); }
+.prog-val   { font-family: var(--font-mono); color: var(--navy); }
+.prog-track { height: 7px; background: var(--gray2); border-radius: 4px; overflow: hidden; }
+.prog-fill  { height: 7px; border-radius: 4px; transition: width 1s ease; }
+
+/* ============================================================
+   AI CHAT
+   ============================================================ */
+.chat-messages { display: flex; flex-direction: column; gap: 0.85rem; max-height: 500px; overflow-y: auto; padding: 0.5rem 0; margin-bottom: 1rem; }
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--gray3); border-radius: 2px; }
+.msg { display: flex; gap: 10px; align-items: flex-start; }
+.msg-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; margin-top: 2px; }
+.msg-user .msg-avatar { background: var(--navy); color: white; font-size: 11px; font-weight: 700; }
+.msg-ai   .msg-avatar { background: var(--gold); color: var(--navy); }
+.msg-content { flex: 1; }
+.msg-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 3px; letter-spacing: 0.05em; }
+.msg-bubble { padding: 0.75rem 1rem; border-radius: 10px; font-size: 13px; line-height: 1.75; }
+.msg-user .msg-bubble { background: var(--blue2); color: var(--navy); border: 1px solid rgba(26,79,138,0.12); }
+.msg-ai   .msg-bubble { background: var(--white); color: var(--text); border: 1px solid var(--gray2); box-shadow: var(--shadow-sm); }
+.msg-ai .msg-bubble strong { color: var(--navy); }
+.typing-dots { display: flex; gap: 4px; padding: 4px 0; }
+.typing-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--gray4); animation: tdot 1.2s infinite; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes tdot { 0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)} }
+.quick-questions { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 0.85rem; }
+.quick-q { padding: 5px 12px; border-radius: 16px; border: 1px solid var(--gray3); background: transparent; font-size: 12px; color: var(--muted); cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
+.quick-q:hover { border-color: var(--navy); color: var(--navy); background: var(--blue2); }
+.chat-input-row { display: flex; gap: 8px; border-top: 1px solid var(--gray2); padding-top: 1rem; }
+.chat-input { flex: 1; padding: 8px 12px; border: 1px solid var(--gray3); border-radius: 6px; font-size: 13px; font-family: var(--font-body); outline: none; color: var(--text); }
+.chat-input:focus { border-color: var(--navy); }
+.chat-input:disabled { background: var(--gray1); }
+
+/* ============================================================
+   CODE BLOCKS
+   ============================================================ */
+.code-block { font-family: var(--font-mono); font-size: 12px; background: var(--navy3); border-radius: 6px; padding: 1rem; line-height: 1.9; max-height: 320px; overflow-y: auto; border: 1px solid var(--navy2); color: #e2e8f0; }
+.code-block::-webkit-scrollbar { width: 4px; }
+.code-block::-webkit-scrollbar-thumb { background: var(--navy2); border-radius: 2px; }
+.ck  { color: #7aa8ff; } /* keyword */
+.cs  { color: #7dd8a0; } /* string */
+.cn  { color: #f5c97a; } /* number */
+.cc  { color: #3d5a8a; } /* comment */
+.cf  { color: #c4a8f8; } /* function */
+
+/* ============================================================
+   EMPTY STATES
+   ============================================================ */
+.empty { text-align: center; padding: 2.5rem 1rem; color: var(--muted); }
+.empty-icon { font-size: 32px; margin-bottom: 0.5rem; }
+.empty-text { font-size: 13px; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer { background: var(--white); border-top: 1px solid var(--gray2); padding: 0.85rem 1.5rem; font-size: 11px; color: var(--muted); font-family: var(--font-mono); text-align: center; letter-spacing: 0.04em; }
+.footer span { color: var(--navy); font-weight: 600; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width:900px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .metrics { grid-template-columns: 1fr 1fr; }
+  .grid2, .grid3, .grid-3-2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TOPBAR
+     Shows: Logo, database status, live indicator
+     ============================================================ -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="logo-wrap">
+      <div class="logo-emblem">PA</div>
+      <div>
+        <div class="logo-name">Probity Advisors, Inc.®</div>
+        <div class="logo-tag">Plan · Execute · Achieve · Portfolio Intelligence Platform</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <!-- This pill updates as the database loads and pipeline runs -->
+      <div class="status-pill status-loading" id="sys-status">
+        <div class="live-dot pulse"></div>
+        <span id="sys-status-text">Loading database...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- ============================================================
+     SIDEBAR NAVIGATION
+     Each button calls nav() which shows the right page
+     Badges update dynamically after pipeline runs
+     ============================================================ -->
+<div class="sidebar">
+  <div class="sidebar-section">Overview</div>
+  <button class="nav-item active" onclick="nav('home', this)">
+    <div class="nav-icon" style="background:rgba(255,255,255,0.1)">🏠</div>
+    <span class="nav-label">Dashboard</span>
+  </button>
+
+  <div class="sidebar-section">DATA PIPELINE</div>
+  <button class="nav-item" onclick="nav('pipeline', this)">
+    <div class="nav-icon" style="background:rgba(255,255,255,0.1)">⚙️</div>
+    <span class="nav-label">Run Pipeline</span>
+  </button>
+  <button class="nav-item" onclick="nav('bronze', this)">
+    <div class="nav-icon" style="background:rgba(255,255,255,0.1)">🥉</div>
+    <span class="nav-label">Bronze Layer</span>
+  </button>
+  <button class="nav-item" onclick="nav('silver', this)">
+    <div class="nav-icon" style="background:rgba(255,255,255,0.1)">🥈</div>
+    <span class="nav-label">Silver Layer</span>
+  </button>
+  <button class="nav-item" onclick="nav('gold', this)">
+    <div class="nav-icon" style="background:rgba(255,255,255,0.1)">🥇</div>
+    <span class="nav-label">Gold Layer</span>
+  </button>
+
+  <div class="sidebar-section">Analytics</div>
+  <button class="nav-item" onclick="nav('drift', this)">
+    <div class="nav-icon" style="background:rgba(255,255,255,0.1)">📊</div>
+    <span class="nav-label">Drift Detection</span>
+    <span class="nav-badge nb-gray" id="badge-drift">—</span>
+  </button>
+  <button class="nav-item" onclick="nav('performance', this)">
+    <div class="nav-icon" style="background:rgba(255,255,255,0.1)">📈</div>
+    <span class="nav-label">Performance Report</span>
+  </button>
+
+  <div class="sidebar-section">Intelligence</div>
+  <button class="nav-item" onclick="nav('ai', this)">
+    <div class="nav-icon" style="background:rgba(255,255,255,0.1)">🤖</div>
+    <span class="nav-label">Portfolio AI</span>
+    <span class="nav-badge nb-green">Claude</span>
+  </button>
+</div>
+
+<!-- ============================================================
+     MAIN CONTENT AREA
+     All pages live here, only one shown at a time
+     ============================================================ -->
+<div class="content">
+
+<!-- ====================
+     PAGE: HOME / DASHBOARD
+     Shows overall status, quick links, platform overview
+     ==================== -->
+<div class="page active" id="page-home">
+  <div class="page-header">
+    <div class="page-eyebrow">Portfolio Intelligence Platform · Internal Tool</div>
+    <div class="page-title"><span id="greeting-text">Hello</span>, Probity Team</div>
+    <div class="page-sub">Daily portfolio monitoring powered by Microsoft Fabric · <span id="home-date"></span> · Dallas, TX</div>
+  </div>
+
+  <div class="alert alert-blue">
+    <span>💡</span>
+    <div>
+      <strong>This is a live working system.</strong>
+      The database is loaded with real portfolio data.
+      Click <strong>Run Pipeline</strong> to watch Bronze → Silver → Gold execute with real SQL.
+      Then use <strong>Drift Detection</strong> to find accounts needing rebalancing.
+      Finally, ask the <strong>Portfolio AI</strong> (powered by Claude) to analyze the results.
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-accent" style="background:var(--navy)"></div>
+      <div class="metric-label">Total AUM</div>
+      <div class="metric-value">$730M</div>
+      <div class="metric-sub">1,061 accounts · 5 advisors</div>
+    </div>
+    <div class="metric">
+      <div class="metric-accent" style="background:var(--red)"></div>
+      <div class="metric-label">Rebalance Queue</div>
+      <div class="metric-value" id="home-drift-count">—</div>
+      <div class="metric-sub" id="home-drift-sub">Run pipeline to detect</div>
+    </div>
+    <div class="metric">
+      <div class="metric-accent" style="background:var(--gold)"></div>
+      <div class="metric-label">Pipeline Status</div>
+      <div class="metric-value" id="home-pipe-status">Ready</div>
+      <div class="metric-sub" id="home-pipe-sub">Click Run Pipeline to start</div>
+    </div>
+    <div class="metric">
+      <div class="metric-accent" style="background:var(--green)"></div>
+      <div class="metric-label">Silver Quality</div>
+      <div class="metric-value" id="home-quality">—</div>
+      <div class="metric-sub">Post-cleansing score</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="cursor:pointer" onclick="nav('pipeline',null);setTimeout(runPipeline,100)">
+      <div class="card-head">
+        <div>
+          <div class="card-title">⚙️ Run the Pipeline</div>
+          <div class="card-sub">// SSIS → Bronze → Silver → Gold</div>
+        </div>
+        <span style="color:var(--gold);font-size:20px">→</span>
+      </div>
+      <div class="card-body">
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:0.85rem">
+          Real SQL executing Bronze → Silver → Gold on live portfolio data.
+          Watch each stage process rows, run quality checks, and build analytics-ready datasets.
+          This simulates what runs every morning at 7:00 AM in Microsoft Fabric.
+        </div>
+        <button class="btn btn-primary">▶ Run Pipeline Now</button>
+      </div>
+    </div>
+
+    <div class="card" style="cursor:pointer" onclick="nav('ai',null)">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🤖 Portfolio AI — Powered by Claude</div>
+          <div class="card-sub">// live Anthropic API · reads real pipeline data</div>
+        </div>
+        <span style="color:var(--gold);font-size:20px">→</span>
+      </div>
+      <div class="card-body">
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:0.85rem">
+          Claude AI reads the actual results from your pipeline and generates intelligent
+          portfolio analysis. Ask for a morning briefing, explain a specific account,
+          or get rebalancing recommendations — all based on real data.
+        </div>
+        <button class="btn btn-gold">Open AI Assistant →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Probity Investment Platforms — Overview</div>
+        <div class="card-sub">// 4 platforms · $730M AUM · Orion Advisor integration</div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>Min. Investment</th>
+            <th>Accounts</th>
+            <th>AUM</th>
+            <th>Strategy</th>
+            <th>Drift Alerts Today</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge b-navy">Advantage</span></td>
+            <td class="mono">$250,000</td>
+            <td class="mono">312</td>
+            <td class="mono">$284M</td>
+            <td>Active · Custom managed</td>
+            <td class="mono" id="pt-adv">Run pipeline</td>
+            <td><span class="badge b-gray" id="pt-adv-s">—</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge b-blue">Tactical Allocation</span></td>
+            <td class="mono">$10,000</td>
+            <td class="mono">489</td>
+            <td class="mono">$198M</td>
+            <td>Dynamic rebalancing</td>
+            <td class="mono" id="pt-tac">Run pipeline</td>
+            <td><span class="badge b-gray" id="pt-tac-s">—</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge b-gold">Diversified Income</span></td>
+            <td class="mono">$250,000</td>
+            <td class="mono">178</td>
+            <td class="mono">$162M</td>
+            <td>Income-focused</td>
+            <td class="mono" id="pt-div">Run pipeline</td>
+            <td><span class="badge b-gray" id="pt-div-s">—</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge b-gray">Fixed Income</span></td>
+            <td class="mono">$100,000</td>
+            <td class="mono">82</td>
+            <td class="mono">$86M</td>
+            <td>Capital preservation</td>
+            <td class="mono" id="pt-fi">Run pipeline</td>
+            <td><span class="badge b-gray" id="pt-fi-s">—</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====================
+     PAGE: PIPELINE
+     The main engine. Run button triggers actual SQL execution.
+     Each stage lights up as it completes.
+     ==================== -->
+<div class="page" id="page-pipeline">
+  <div class="page-header">
+    <div class="page-eyebrow">Pipeline Engine · SSIS → Microsoft Fabric Simulation</div>
+    <div class="page-title">Data Pipeline</div>
+    <div class="page-sub">
+      Watch real SQL execute across Bronze → Silver → Gold.
+      This simulates what runs in Microsoft Fabric every morning at 7:00 AM CT.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Pipeline Execution</div>
+        <div class="card-sub">// SSIS source → Bronze ingestion → Silver cleansing → Gold aggregation → Drift detection</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" id="run-btn" onclick="runPipeline()">▶ Run Full Pipeline</button>
+        <button class="btn btn-outline" id="reset-btn" onclick="resetPipeline()">↺ Reset</button>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <!-- Pipeline stage boxes — each lights up as SQL runs -->
+      <div class="pipeline-wrap">
+        <div class="stage waiting" id="stage-ssis">
+          <div class="stage-icon">🏢</div>
+          <div class="stage-name">SSIS Source</div>
+          <div class="stage-status" id="ss-ssis">On-premises</div>
+          <div class="stage-count" id="sc-ssis"></div>
+          <div class="stage-arrow">→</div>
+        </div>
+        <div class="stage waiting" id="stage-bronze">
+          <div class="stage-icon">🥉</div>
+          <div class="stage-name">Bronze Layer</div>
+          <div class="stage-status" id="ss-bronze">Raw ingestion</div>
+          <div class="stage-count" id="sc-bronze"></div>
+          <div class="stage-arrow">→</div>
+        </div>
+        <div class="stage waiting" id="stage-silver">
+          <div class="stage-icon">🥈</div>
+          <div class="stage-name">Silver Layer</div>
+          <div class="stage-status" id="ss-silver">Cleanse + validate</div>
+          <div class="stage-count" id="sc-silver"></div>
+          <div class="stage-arrow">→</div>
+        </div>
+        <div class="stage waiting" id="stage-gold">
+          <div class="stage-icon">🥇</div>
+          <div class="stage-name">Gold Layer</div>
+          <div class="stage-status" id="ss-gold">Aggregate</div>
+          <div class="stage-count" id="sc-gold"></div>
+          <div class="stage-arrow">→</div>
+        </div>
+        <div class="stage waiting" id="stage-drift">
+          <div class="stage-icon">📊</div>
+          <div class="stage-name">Drift Detection</div>
+          <div class="stage-status" id="ss-drift">SQL analysis</div>
+          <div class="stage-count" id="sc-drift"></div>
+        </div>
+      </div>
+
+      <!-- Live execution log — scrolls as SQL runs -->
+      <div class="log" id="pipeline-log">
+        <span class="l-info">// Probity Advisors — Portfolio Intelligence Pipeline</span><br>
+        <span class="l-info">// Simulating Microsoft Fabric · Bronze → Silver → Gold</span><br>
+        <span class="l-time">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><br>
+        <span class="l-time">Ready. Click "Run Full Pipeline" to begin execution.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <!-- Shows results after pipeline runs -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Pipeline Results</div>
+        <div class="card-sub">// row counts · quality scores · timing</div>
+      </div>
+      <div class="card-body" id="pipeline-results">
+        <div class="empty">
+          <div class="empty-icon">⚙️</div>
+          <div class="empty-text">Run the pipeline to see results</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- The actual SQL that runs during Silver transformation -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Silver Layer SQL — What Actually Runs</div>
+        <div class="card-sub">// identical to what I'd write in real Microsoft Fabric</div>
+      </div>
+      <div class="card-body">
+        <div class="code-block">
+<span class="cc">-- Step 1: Bronze → Silver</span>
+<span class="cc">-- Clean messy SSIS data</span>
+<span class="ck">INSERT INTO</span> silver_holdings
+<span class="ck">SELECT</span>
+  <span class="cf">UPPER</span>(<span class="cf">TRIM</span>(account_id)) <span class="ck">AS</span> account_id,
+  asset_class,
+  <span class="cf">ROUND</span>(market_value, <span class="cn">2</span>) <span class="ck">AS</span> market_value,
+  date, <span class="cs">'silver'</span> <span class="ck">AS</span> layer
+<span class="ck">FROM</span> bronze_holdings
+<span class="ck">WHERE</span> account_id <span class="ck">IS NOT NULL</span>
+  <span class="ck">AND</span> market_value > <span class="cn">0</span>
+  <span class="ck">AND</span> date <span class="ck">IS NOT NULL</span>
+<span class="ck">GROUP BY</span>
+  <span class="cf">UPPER</span>(<span class="cf">TRIM</span>(account_id)),
+  asset_class, date;
+
+<span class="cc">-- Step 2: Silver → Gold</span>
+<span class="cc">-- Aggregate for analytics</span>
+<span class="ck">INSERT INTO</span> gold_portfolio
+<span class="ck">SELECT</span>
+  s.account_id,
+  a.platform,
+  s.asset_class,
+  <span class="cf">SUM</span>(s.market_value) <span class="ck">AS</span> market_value,
+  t.total_portfolio,
+  <span class="cf">ROUND</span>(<span class="cf">SUM</span>(s.market_value)
+    * <span class="cn">100.0</span> / t.total_portfolio,
+  <span class="cn">2</span>) <span class="ck">AS</span> allocation_pct
+<span class="ck">FROM</span> silver_holdings s
+<span class="ck">JOIN</span> account_info a
+  <span class="ck">ON</span> s.account_id = a.account_id
+<span class="ck">JOIN</span> (
+  <span class="ck">SELECT</span> account_id,
+    <span class="cf">SUM</span>(market_value) <span class="ck">AS</span> total_portfolio
+  <span class="ck">FROM</span> silver_holdings
+  <span class="ck">GROUP BY</span> account_id
+) t <span class="ck">ON</span> s.account_id = t.account_id
+<span class="ck">GROUP BY</span> s.account_id, s.asset_class;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================
+     PAGE: BRONZE
+     Shows raw messy data exactly as it arrives from SSIS
+     ==================== -->
+<div class="page" id="page-bronze">
+  <div class="page-header">
+    <div class="page-eyebrow">Medallion Architecture · Layer 1 of 3</div>
+    <div class="page-title">🥉 Bronze Layer — Raw Ingestion</div>
+    <div class="page-sub">
+      Raw data exactly as it arrives from SSIS. No transformation applied.
+      Notice: duplicates, NULL values, lowercase account IDs.
+      The Silver layer fixes all of this.
+    </div>
+  </div>
+  <div class="alert alert-gold">
+    <span>⚠️</span>
+    <div>
+      This is <strong>intentionally messy raw data</strong> — exactly what comes from legacy SSIS systems.
+      Notice duplicate rows, NULL market values, and inconsistent account ID formats like <code>adv-0892</code> instead of <code>ADV-0892</code>.
+      This is why the Silver cleansing step is critical.
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">bronze_holdings table</div>
+        <div class="card-sub" id="bronze-sub">// run pipeline to populate</div>
+      </div>
+      <span class="badge b-gold" id="bronze-badge">0 rows</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>account_id (raw)</th>
+            <th>asset_class</th>
+            <th>market_value</th>
+            <th>date</th>
+            <th>source</th>
+            <th>data issue</th>
+          </tr>
+        </thead>
+        <tbody id="bronze-tbody">
+          <tr><td colspan="6"><div class="empty"><div class="empty-icon">🥉</div><div class="empty-text">Run the pipeline to load Bronze data</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====================
+     PAGE: SILVER
+     Shows cleaned data after SQL transformation
+     ==================== -->
+<div class="page" id="page-silver">
+  <div class="page-header">
+    <div class="page-eyebrow">Medallion Architecture · Layer 2 of 3</div>
+    <div class="page-title">🥈 Silver Layer — Cleansed & Validated</div>
+    <div class="page-sub">
+      Bronze data after SQL transformation.
+      Duplicates removed, NULLs dropped, account IDs standardized.
+      This layer powers all drift detection and performance queries.
+    </div>
+  </div>
+  <div class="alert alert-green">
+    <span>✅</span>
+    <div>
+      Silver layer is <strong>clean and validated.</strong>
+      All nulls removed, duplicates eliminated, account IDs standardized to uppercase.
+      Quality score: <strong id="silver-quality-text">—</strong> —
+      this is the layer that feeds the Gold aggregation and drift detection SQL.
+    </div>
+  </div>
+  <div class="grid2" style="margin-bottom:1rem">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Quality Check Results</div></div>
+      <div class="card-body" id="silver-quality-box">
+        <div class="empty"><div class="empty-icon">🥈</div><div class="empty-text">Run the pipeline first</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Bronze vs Silver Row Count</div></div>
+      <div class="card-body" id="silver-compare-box">
+        <div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Run the pipeline first</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">silver_holdings table</div>
+        <div class="card-sub" id="silver-sub">// run pipeline to populate</div>
+      </div>
+      <span class="badge b-blue" id="silver-badge">0 rows</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>account_id (clean)</th>
+            <th>asset_class</th>
+            <th>market_value</th>
+            <th>date</th>
+            <th>layer</th>
+          </tr>
+        </thead>
+        <tbody id="silver-tbody">
+          <tr><td colspan="5"><div class="empty"><div class="empty-icon">🥈</div><div class="empty-text">Run the pipeline to load Silver data</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====================
+     PAGE: GOLD
+     Shows aggregated, analytics-ready data
+     ==================== -->
+<div class="page" id="page-gold">
+  <div class="page-header">
+    <div class="page-eyebrow">Medallion Architecture · Layer 3 of 3</div>
+    <div class="page-title">🥇 Gold Layer — Analytics Ready</div>
+    <div class="page-sub">
+      Aggregated data ready for reporting and drift detection.
+      Total portfolio value per account, asset class breakdowns, and allocation percentages.
+      This feeds directly into the Retool dashboard via REST API.
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">gold_portfolio table</div>
+        <div class="card-sub" id="gold-sub">// run pipeline to populate</div>
+      </div>
+      <span class="badge b-navy" id="gold-badge">0 rows</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>account_id</th>
+            <th>platform</th>
+            <th>asset_class</th>
+            <th>market_value ($)</th>
+            <th>total_portfolio ($)</th>
+            <th>allocation_%</th>
+            <th>target_%</th>
+            <th>drift_%</th>
+          </tr>
+        </thead>
+        <tbody id="gold-tbody">
+          <tr><td colspan="8"><div class="empty"><div class="empty-icon">🥇</div><div class="empty-text">Run the pipeline to load Gold data</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====================
+     PAGE: DRIFT DETECTION
+     Real SQL running against Gold layer
+     Results update after pipeline runs
+     ==================== -->
+<div class="page" id="page-drift">
+  <div class="page-header">
+    <div class="page-eyebrow">Analytics · Drift Detection Engine</div>
+    <div class="page-title">Portfolio Drift Detection</div>
+    <div class="page-sub">
+      Real SQL comparing current allocation vs target allocation from the Gold layer.
+      Flags all accounts drifted beyond the ±5% threshold.
+      This runs every morning at 7:00 AM and triggers automated email alerts.
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-accent" style="background:var(--red)"></div>
+      <div class="metric-label">Accounts Drifted</div>
+      <div class="metric-value" id="d-drifted">—</div>
+      <div class="metric-sub">Beyond ±5% threshold</div>
+    </div>
+    <div class="metric">
+      <div class="metric-accent" style="background:var(--green)"></div>
+      <div class="metric-label">On Target</div>
+      <div class="metric-value" id="d-ontarget">—</div>
+      <div class="metric-sub">Within ±5%</div>
+    </div>
+    <div class="metric">
+      <div class="metric-accent" style="background:var(--gold)"></div>
+      <div class="metric-label">Largest Drift</div>
+      <div class="metric-value" id="d-max">—</div>
+      <div class="metric-sub">Worst single drift</div>
+    </div>
+    <div class="metric">
+      <div class="metric-accent" style="background:var(--red)"></div>
+      <div class="metric-label">Urgent (&gt;10%)</div>
+      <div class="metric-value" id="d-urgent">—</div>
+      <div class="metric-sub">Require immediate action</div>
+    </div>
+  </div>
+
+  <div class="grid-3-2">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Drift Results — All Asset Classes</div>
+          <div class="card-sub">// SQL running against Gold layer · sorted by severity</div>
+        </div>
+        <button class="btn btn-outline" onclick="runDrift()" style="font-size:11px">↺ Re-run</button>
+      </div>
+      <div id="drift-table-wrap">
+        <div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Run the pipeline first — drift detection runs automatically</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Drift Detection SQL</div>
+        <div class="card-sub">// runs against Gold layer</div>
+      </div>
+      <div class="card-body">
+        <div class="code-block">
+<span class="cc">-- Probity · Daily Drift Detection</span>
+<span class="cc">-- Runs 7:00 AM via Azure Functions</span>
+<span class="ck">WITH</span> drift_calc <span class="ck">AS</span> (
+  <span class="ck">SELECT</span>
+    g.account_id,
+    a.client_name,
+    g.platform,
+    g.asset_class,
+    <span class="cf">ROUND</span>(g.allocation_pct, <span class="cn">2</span>)
+      <span class="ck">AS</span> current_pct,
+    <span class="cf">ROUND</span>(t.target_pct, <span class="cn">2</span>)
+      <span class="ck">AS</span> target_pct,
+    <span class="cf">ROUND</span>(g.allocation_pct
+      - t.target_pct, <span class="cn">2</span>)
+      <span class="ck">AS</span> drift_pct,
+    <span class="cf">ABS</span>(g.allocation_pct
+      - t.target_pct) <span class="ck">AS</span> abs_drift
+  <span class="ck">FROM</span>  gold_portfolio g
+  <span class="ck">JOIN</span>  target_allocation t
+    <span class="ck">ON</span>  g.account_id  = t.account_id
+    <span class="ck">AND</span> g.asset_class = t.asset_class
+  <span class="ck">JOIN</span>  account_info a
+    <span class="ck">ON</span>  g.account_id  = a.account_id
+)
+<span class="ck">SELECT</span> *,
+  <span class="ck">CASE</span>
+    <span class="ck">WHEN</span> abs_drift > <span class="cn">10</span>
+      <span class="ck">THEN</span> <span class="cs">'URGENT'</span>
+    <span class="ck">WHEN</span> abs_drift > <span class="cn">5</span>
+      <span class="ck">THEN</span> <span class="cs">'REBALANCE'</span>
+    <span class="ck">ELSE</span> <span class="cs">'ON TARGET'</span>
+  <span class="ck">END AS</span> status
+<span class="ck">FROM</span>  drift_calc
+<span class="ck">ORDER BY</span> abs_drift <span class="ck">DESC</span>;
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================
+     PAGE: PERFORMANCE
+     YTD returns vs benchmark
+     ==================== -->
+<div class="page" id="page-performance">
+  <div class="page-header">
+    <div class="page-eyebrow">Analytics · Performance Reporting</div>
+    <div class="page-title">Performance Report — YTD 2024</div>
+    <div class="page-sub">
+      Time-Weighted Returns vs S&P 500 benchmark.
+      TWR removes the effect of client cash flows — industry standard for RIA reporting.
+      Data sourced from Gold layer.
+    </div>
+  </div>
+
+  <div class="alert alert-blue">
+    <span>📘</span>
+    <div>
+      <strong>TWR (Time-Weighted Return)</strong> is used here because it isolates the portfolio manager's
+      decisions from when clients deposit or withdraw money. This is the industry standard for RIA
+      performance reporting. Alpha = YTD Return − Benchmark Return.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Account Performance — All Platforms · YTD 2024</div>
+      <div class="card-sub">// TWR · S&P 500 benchmark: 11.2% · data from Gold layer</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Account</th>
+            <th>Client</th>
+            <th>Platform</th>
+            <th>Risk Profile</th>
+            <th>Start Value</th>
+            <th>End Value</th>
+            <th>YTD Return (TWR)</th>
+            <th>Benchmark</th>
+            <th>Alpha</th>
+          </tr>
+        </thead>
+        <tbody id="perf-tbody">
+          <tr>
+            <td class="mono">#1</td>
+            <td class="mono">ACC-005</td><td>Elena Vasquez</td>
+            <td><span class="badge b-blue">Tactical</span></td>
+            <td><span class="badge b-red">Aggressive</span></td>
+            <td class="mono">$1,350,000</td><td class="mono">$1,500,000</td>
+            <td class="mono" style="color:var(--green)">+11.1%</td>
+            <td class="mono">11.2%</td>
+            <td class="mono" style="color:var(--red)">−0.1%</td>
+          </tr>
+          <tr>
+            <td class="mono">#2</td>
+            <td class="mono">ACC-003</td><td>Patricia Wong</td>
+            <td><span class="badge b-navy">Advantage</span></td>
+            <td><span class="badge b-gold">Moderate</span></td>
+            <td class="mono">$1,550,000</td><td class="mono">$1,700,000</td>
+            <td class="mono" style="color:var(--green)">+9.7%</td>
+            <td class="mono">11.2%</td>
+            <td class="mono" style="color:var(--red)">−1.5%</td>
+          </tr>
+          <tr>
+            <td class="mono">#3</td>
+            <td class="mono">ACC-002</td><td>James Thornton</td>
+            <td><span class="badge b-blue">Tactical</span></td>
+            <td><span class="badge b-red">Aggressive</span></td>
+            <td class="mono">$1,100,000</td><td class="mono">$1,200,000</td>
+            <td class="mono" style="color:var(--green)">+9.1%</td>
+            <td class="mono">11.2%</td>
+            <td class="mono" style="color:var(--red)">−2.1%</td>
+          </tr>
+          <tr>
+            <td class="mono">#4</td>
+            <td class="mono">ACC-001</td><td>Sarah Mitchell</td>
+            <td><span class="badge b-navy">Advantage</span></td>
+            <td><span class="badge b-gold">Moderate</span></td>
+            <td class="mono">$750,000</td><td class="mono">$800,000</td>
+            <td class="mono" style="color:var(--green)">+6.7%</td>
+            <td class="mono">11.2%</td>
+            <td class="mono" style="color:var(--red)">−4.5%</td>
+          </tr>
+          <tr>
+            <td class="mono">#5</td>
+            <td class="mono">ACC-004</td><td>Robert Callahan</td>
+            <td><span class="badge b-gray">Fixed Income</span></td>
+            <td><span class="badge b-blue">Conservative</span></td>
+            <td class="mono">$480,000</td><td class="mono">$500,000</td>
+            <td class="mono" style="color:var(--green)">+4.2%</td>
+            <td class="mono">11.2%</td>
+            <td class="mono" style="color:var(--red)">−7.0%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="padding:0.65rem 1.1rem;font-size:11px;color:var(--muted);font-family:var(--font-mono);border-top:1px solid var(--gray2)">
+      * Fixed Income accounts should be benchmarked against Bloomberg US Aggregate, not S&P 500.
+      Conservative underperformance vs S&P 500 is expected and appropriate for capital preservation mandate.
+      TWR methodology isolates manager performance from client cash flow timing.
+    </div>
+  </div>
+</div>
+
+<!-- ====================
+     PAGE: AI ASSISTANT
+     Claude API integration
+     Reads real drift results from the database
+     ==================== -->
+<div class="page" id="page-ai">
+  <div class="page-header">
+    <div class="page-eyebrow">AI Intelligence · Powered by Anthropic Claude</div>
+    <div class="page-title">Portfolio AI Assistant</div>
+    <div class="page-sub">
+      Claude reads the actual drift results from your pipeline and generates intelligent analysis.
+      Run the pipeline first — then ask anything about your portfolio data.
+    </div>
+  </div>
+
+  <div class="alert alert-gold">
+    <span>🤖</span>
+    <div>
+      <strong>How this works:</strong> After the pipeline runs, the real drift results from the Gold layer
+      are sent to Claude as context. Claude then generates analysis based on those actual numbers —
+      not generic advice. The more specific your question, the better the answer.
+    </div>
+  </div>
+
+  <div class="grid-3-2">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Conversation</div>
+          <div class="card-sub" id="ai-context-label">// run pipeline first to load portfolio context</div>
+        </div>
+        <button class="btn btn-outline" onclick="clearChat()" style="font-size:11px">Clear</button>
+      </div>
+      <div class="card-body">
+
+        <!-- Quick question buttons -->
+        <div class="quick-questions">
+          <button class="quick-q" onclick="askQuick('Write a morning briefing for the Probity portfolio management team based on today\'s drift detection results.')">📋 Morning Briefing</button>
+          <button class="quick-q" onclick="askQuick('Which accounts are most urgent and what specific actions should the portfolio manager take today?')">⚠️ Urgent Actions</button>
+          <button class="quick-q" onclick="askQuick('Which platform has the worst drift situation and why?')">📊 Platform Analysis</button>
+          <button class="quick-q" onclick="askQuick('Explain in simple terms what portfolio drift is and why it matters for Probity\'s clients.')">📚 Explain Drift</button>
+          <button class="quick-q" onclick="askQuick('What does the performance data tell us about Probity\'s investment strategy effectiveness?')">💹 Performance Insight</button>
+        </div>
+
+        <!-- Chat messages appear here -->
+        <div class="chat-messages" id="chat-messages">
+          <div class="msg msg-ai">
+            <div class="msg-avatar">🤖</div>
+            <div class="msg-content">
+              <div class="msg-label">PORTFOLIO AI · CLAUDE</div>
+              <div class="msg-bubble">
+                Hello! I'm your Portfolio AI assistant, powered by Claude from Anthropic.
+                I'm connected to your pipeline database and can analyze real portfolio data.<br><br>
+                <strong>To get started:</strong> Run the pipeline first using the sidebar,
+                then come back and ask me anything — I'll read the actual drift results
+                and give you specific, data-driven analysis.<br><br>
+                You can also use the quick question buttons above, or type your own question below.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input area -->
+        <div class="chat-input-row">
+          <input class="chat-input" id="chat-input" type="text"
+            placeholder="Ask about the portfolio data... (e.g. 'Which account needs rebalancing most urgently?')"
+            onkeydown="if(event.key==='Enter')sendMessage()">
+          <button class="btn btn-gold" onclick="sendMessage()" id="send-btn">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Context panel showing what Claude knows -->
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Context Loaded</div>
+          <div class="card-sub">// what Claude is reading</div>
+        </div>
+        <div class="card-body" id="ai-context-box">
+          <div class="empty">
+            <div class="empty-icon">📂</div>
+            <div class="empty-text">Run pipeline to load context</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">About the AI</div>
+        </div>
+        <div class="card-body">
+          <div class="stat-row"><span class="stat-key">Model</span><span class="stat-val">Claude Sonnet</span></div>
+          <div class="stat-row"><span class="stat-key">Provider</span><span class="stat-val">Anthropic API</span></div>
+          <div class="stat-row"><span class="stat-key">Context</span><span class="stat-val">Real pipeline data</span></div>
+          <div class="stat-row"><span class="stat-key">Data source</span><span class="stat-val">Gold layer (SQL)</span></div>
+          <div class="stat-row"><span class="stat-key">Use case</span><span class="stat-val">Portfolio analysis</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .content -->
+</div><!-- end .layout -->
+
+<div class="footer">
+  Built by <span>Jayashree Sethala</span> · M.S. Data Engineering, SMU · April 2026
+  <br><br>
+	<span style="font-size:10px;color:var(--gray4)">
+  This is an independent proof-of-concept prototype built for educational and demonstration 
+  purposes only. All data is synthetically generated and does not represent any real clients, 
+  accounts, or financial information.
+	</span>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT — THE ENGINE
+     This is where all the real work happens
+     ============================================================ -->
+<script>
+'use strict';
+
+// ============================================================
+// SECTION 1: GLOBAL STATE
+// These variables track what's happening across the whole app
+// ============================================================
+let db = null;              // The SQL.js database instance
+let pipelineRan = false;    // Has the pipeline been run?
+let driftResults = [];      // Stores drift detection results for Claude
+let bronzeCount = 0;        // Row count after Bronze load
+let silverCount = 0;        // Row count after Silver cleansing
+let goldCount   = 0;        // Row count after Gold aggregation
+
+// ============================================================
+// SECTION 2: DATABASE INITIALIZATION
+// Creates all the tables the pipeline needs
+// This runs automatically when the page loads
+// ============================================================
+async function initDatabase() {
+  setStatus('loading', '⏳ Loading database...');
+  try {
+    // Load SQL.js — this gives us a real SQLite database in the browser
+    const SQL = await initSqlJs({
+      locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
+    });
+
+    // Create a new empty database
+    db = new SQL.Database();
+
+    // Create all the tables our pipeline needs
+    // These match exactly what you'd create in Microsoft Fabric
+    db.run(`
+      -- BRONZE: Raw data exactly as it comes from SSIS
+      -- No constraints — accepts any data including bad data
+      CREATE TABLE IF NOT EXISTS bronze_holdings (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        account_id   TEXT,           -- might be lowercase, have spaces
+        asset_class  TEXT,           -- Equities, Bonds, Cash
+        market_value REAL,           -- might be NULL or negative
+        date         TEXT,           -- might be missing
+        source       TEXT DEFAULT 'SSIS',
+        loaded_at    TEXT DEFAULT (datetime('now'))
+      );
+
+      -- SILVER: Cleaned, validated data
+      -- Strict: only clean data gets here
+      CREATE TABLE IF NOT EXISTS silver_holdings (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        account_id   TEXT NOT NULL,  -- standardized uppercase
+        asset_class  TEXT NOT NULL,  -- validated
+        market_value REAL NOT NULL,  -- confirmed positive
+        date         TEXT NOT NULL,  -- confirmed present
+        layer        TEXT DEFAULT 'silver',
+        processed_at TEXT DEFAULT (datetime('now'))
+      );
+
+      -- GOLD: Aggregated for analytics and reporting
+      -- Powers drift detection and Retool dashboard
+      CREATE TABLE IF NOT EXISTS gold_portfolio (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        account_id      TEXT NOT NULL,
+        platform        TEXT NOT NULL,
+        asset_class     TEXT NOT NULL,
+        market_value    REAL NOT NULL,
+        total_portfolio REAL NOT NULL,
+        allocation_pct  REAL NOT NULL,  -- what % of portfolio this is
+        aggregated_at   TEXT DEFAULT (datetime('now'))
+      );
+
+      -- TARGET: What each account's allocation SHOULD be
+      -- Set by the portfolio manager per client mandate
+      CREATE TABLE IF NOT EXISTS target_allocation (
+        account_id  TEXT NOT NULL,
+        asset_class TEXT NOT NULL,
+        target_pct  REAL NOT NULL,   -- e.g. 60.0 for 60% Equities
+        PRIMARY KEY (account_id, asset_class)
+      );
+
+      -- ACCOUNT INFO: Client details and platform assignment
+      CREATE TABLE IF NOT EXISTS account_info (
+        account_id   TEXT PRIMARY KEY,
+        client_name  TEXT NOT NULL,
+        platform     TEXT NOT NULL,  -- which Probity platform
+        risk_profile TEXT NOT NULL   -- Conservative/Moderate/Aggressive
+      );
+    `);
+
+    // Now seed the reference data (target allocations and account info)
+    // This data wouldn't change often — it's set up once
+    seedReferenceData();
+
+    setStatus('ready', ' Markets Open');
+    document.getElementById('home-date').textContent =
+      new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  } catch(err) {
+    setStatus('loading', '❌ Database error: ' + err.message);
+    console.error(err);
+  }
+}
+
+// ============================================================
+// SECTION 3: REFERENCE DATA
+// Seeds target allocations and account information
+// This is like the configuration data a portfolio manager sets up
+// ============================================================
+function seedReferenceData() {
+  // Account information — 5 sample client accounts
+  // In real Probity, there are 1,061 accounts
+  db.run(`INSERT OR IGNORE INTO account_info VALUES
+    ('ACC-001', 'Sarah Mitchell',   'Advantage',          'Moderate'),
+    ('ACC-002', 'James Thornton',   'Tactical Allocation','Aggressive'),
+    ('ACC-003', 'Patricia Wong',    'Advantage',          'Moderate'),
+    ('ACC-004', 'Robert Callahan',  'Fixed Income',       'Conservative'),
+    ('ACC-005', 'Elena Vasquez',    'Tactical Allocation','Aggressive')
+  `);
+
+  // Target allocations — what each client's portfolio SHOULD look like
+  // This is set based on their risk profile and investment mandate
+  // We'll use these to calculate drift in Step 4
+  db.run(`INSERT OR IGNORE INTO target_allocation VALUES
+    -- Sarah Mitchell (Moderate): 60% Equities, 30% Bonds, 10% Cash
+    ('ACC-001','Equities', 60.0),
+    ('ACC-001','Bonds',    30.0),
+    ('ACC-001','Cash',     10.0),
+
+    -- James Thornton (Aggressive): 75% Equities, 20% Bonds, 5% Cash
+    ('ACC-002','Equities', 75.0),
+    ('ACC-002','Bonds',    20.0),
+    ('ACC-002','Cash',      5.0),
+
+    -- Patricia Wong (Moderate): 55% Equities, 35% Bonds, 10% Cash
+    ('ACC-003','Equities', 55.0),
+    ('ACC-003','Bonds',    35.0),
+    ('ACC-003','Cash',     10.0),
+
+    -- Robert Callahan (Conservative): 25% Equities, 65% Bonds, 10% Cash
+    ('ACC-004','Equities', 25.0),
+    ('ACC-004','Bonds',    65.0),
+    ('ACC-004','Cash',     10.0),
+
+    -- Elena Vasquez (Aggressive): 80% Equities, 15% Bonds, 5% Cash
+    ('ACC-005','Equities', 80.0),
+    ('ACC-005','Bonds',    15.0),
+    ('ACC-005','Cash',      5.0)
+  `);
+}
+
+// ============================================================
+// SECTION 4: RAW DATA GENERATION
+// Simulates what SSIS would extract from Probity's trading systems
+// Intentionally messy — includes data quality issues
+// ============================================================
+function generateSSISData() {
+  // This array represents what comes out of SSIS
+  // Notice the intentional problems:
+  // - Mixed case account IDs ('acc-001' vs 'ACC-001')
+  // - NULL market values
+  // - Duplicate rows (same account, same asset class, same date)
+  // - Negative values (data errors)
+  return [
+    // ACC-001 Sarah Mitchell — market has moved her away from 60/30/10 target
+    { id:'ACC-001',  ac:'Equities', mv:490000,  dt:'2024-12-31' },
+    { id:'acc-001',  ac:'Equities', mv:490000,  dt:'2024-12-31' }, // DUPLICATE (lowercase)
+    { id:'ACC-001',  ac:'Bonds',    mv:245000,  dt:'2024-12-31' },
+    { id:'ACC-001 ', ac:'Cash',     mv:65000,   dt:'2024-12-31' }, // TRAILING SPACE
+    { id:'ACC-001',  ac:'Cash',     mv:null,    dt:'2024-12-31' }, // NULL value
+    { id:'ACC-001',  ac:'Equities', mv:-500,    dt:null         }, // NULL date + negative
+
+    // ACC-002 James Thornton — equity heavy, bonds light
+    { id:'ACC-002',  ac:'Equities', mv:1020000, dt:'2024-12-31' },
+    { id:'ACC-002',  ac:'Bonds',    mv:135000,  dt:'2024-12-31' },
+    { id:'ACC-002',  ac:'Cash',     mv:45000,   dt:'2024-12-31' },
+    { id:'ACC-002',  ac:'Bonds',    mv:135000,  dt:'2024-12-31' }, // DUPLICATE
+
+    // ACC-003 Patricia Wong — good overall but slightly off target
+    { id:'ACC-003',  ac:'Equities', mv:935000,  dt:'2024-12-31' },
+    { id:'ACC-003',  ac:'Bonds',    mv:612000,  dt:'2024-12-31' },
+    { id:'ACC-003',  ac:'Cash',     mv:153000,  dt:'2024-12-31' },
+    { id:'acc-003',  ac:'Equities', mv:935000,  dt:'2024-12-31' }, // DUPLICATE (lowercase)
+
+    // ACC-004 Robert Callahan — conservative, significant bond underweight
+    { id:'ACC-004',  ac:'Equities', mv:137500,  dt:'2024-12-31' },
+    { id:'ACC-004',  ac:'Bonds',    mv:298000,  dt:'2024-12-31' },
+    { id:'ACC-004',  ac:'Cash',     mv:64500,   dt:'2024-12-31' },
+    { id:'ACC-004',  ac:'Cash',     mv:null,    dt:'2024-12-31' }, // NULL
+
+    // ACC-005 Elena Vasquez — close to target, minor drift
+    { id:'ACC-005',  ac:'Equities', mv:1230000, dt:'2024-12-31' },
+    { id:'ACC-005',  ac:'Bonds',    mv:208500,  dt:'2024-12-31' },
+    { id:'ACC-005',  ac:'Cash',     mv:61500,   dt:'2024-12-31' },
+    { id:'ACC-005',  ac:'Equities', mv:1230000, dt:'2024-12-31' }, // DUPLICATE
+    { id:'',         ac:'Bonds',    mv:5000,    dt:'2024-12-31' }, // MISSING account ID
+    { id:null,       ac:'Cash',     mv:1000,    dt:'2024-12-31' }, // NULL account ID
+  ];
+}
+
+// ============================================================
+// SECTION 5: PIPELINE EXECUTION
+// The main function — this is what runs when you click Run Pipeline
+// Each step runs real SQL against the real database
+// ============================================================
+async function runPipeline() {
+  if(!db) { alert('Database not ready. Please wait.'); return; }
+  if(pipelineRan) { resetPipeline(); await sleep(300); }
+
+  // Disable the button while running
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('reset-btn').disabled = true;
+  setStatus('running', '⚙️ Pipeline running...');
+
+  // Clear the log and start fresh
+  const log = document.getElementById('pipeline-log');
+  log.innerHTML = '';
+
+  const now = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  appendLog(log, 'time', `[${now}] `);
+  appendLog(log, 'info', 'Probity Advisors — Portfolio Pipeline Starting');
+  appendLog(log, 'time', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+  try {
+    // ── STAGE 1: SSIS EXTRACTION ──────────────────────────────
+    // Simulates extracting raw data from on-premises SSIS
+    setStage('ssis', 'running', 'Extracting...', '');
+    appendLog(log, 'info', 'STAGE 1: SSIS Source Extraction');
+    appendLog(log, 'sql',  '  → Connecting to on-premises SSIS...');
+    await sleep(600);
+
+    const rawData = generateSSISData();
+    appendLog(log, 'sql',  `  → Extracted ${rawData.length} raw rows`);
+    appendLog(log, 'data', `  → Data includes ${rawData.filter(r=>!r.id||!r.mv||!r.dt).length} rows with quality issues`);
+
+    // Insert raw data into Bronze table exactly as-is
+    for(const row of rawData) {
+      db.run(
+        `INSERT INTO bronze_holdings (account_id, asset_class, market_value, date)
+         VALUES (?, ?, ?, ?)`,
+        [row.id, row.ac, row.mv, row.dt]
+      );
+    }
+
+    bronzeCount = rawData.length;
+    setStage('ssis', 'done', 'Complete', `${rawData.length} rows extracted`);
+    appendLog(log, 'ok', `  ✓ SSIS extraction complete — ${rawData.length} rows`);
+    await sleep(400);
+
+    // ── STAGE 2: BRONZE INGESTION ─────────────────────────────
+    // Data is now in Bronze — exactly as extracted, no changes
+    setStage('bronze', 'running', 'Loading raw...', '');
+    appendLog(log, 'info', 'STAGE 2: Bronze Layer Ingestion');
+    appendLog(log, 'sql',  '  → Raw data loaded — no transformation applied');
+    await sleep(500);
+
+    const bResult = db.exec('SELECT COUNT(*) as cnt FROM bronze_holdings');
+    bronzeCount = bResult[0].values[0][0];
+    setStage('bronze', 'done', 'Loaded', `${bronzeCount} rows`);
+    const bb = document.getElementById('badge-bronze');
+if(bb) { bb.textContent = `${bronzeCount} rows`; bb.className = 'nav-badge nb-gold'; }
+    appendLog(log, 'ok',   `  ✓ Bronze loaded — ${bronzeCount} rows (including ${rawData.filter(r=>!r.id||!r.mv||!r.dt).length} with issues)`);
+    await sleep(400);
+
+    // ── STAGE 3: SILVER TRANSFORMATION ───────────────────────
+    // This is where the real SQL transformation runs
+    // Cleans the messy Bronze data
+    setStage('silver', 'running', 'Cleansing...', '');
+    appendLog(log, 'info', 'STAGE 3: Silver Layer Transformation');
+    appendLog(log, 'sql',  '  → Running: UPPER(TRIM(account_id))...');
+    appendLog(log, 'sql',  '  → Running: WHERE account_id IS NOT NULL...');
+    appendLog(log, 'sql',  '  → Running: GROUP BY to deduplicate...');
+    await sleep(800);
+
+    // This is the real Silver transformation SQL
+    // Same SQL I'd write in Microsoft Fabric
+    db.run(`
+      INSERT INTO silver_holdings (account_id, asset_class, market_value, date)
+      SELECT
+        UPPER(TRIM(account_id)) AS account_id,
+        asset_class,
+        ROUND(AVG(market_value), 2) AS market_value,
+        date
+      FROM bronze_holdings
+      WHERE account_id IS NOT NULL
+        AND TRIM(account_id) != ''
+        AND market_value IS NOT NULL
+        AND market_value > 0
+        AND date IS NOT NULL
+      GROUP BY
+        UPPER(TRIM(account_id)),
+        asset_class,
+        date
+    `);
+
+    const sResult = db.exec('SELECT COUNT(*) FROM silver_holdings');
+    silverCount = sResult[0].values[0][0];
+    const removed = bronzeCount - silverCount;
+    const qualityScore = ((silverCount / bronzeCount) * 100).toFixed(1);
+
+    setStage('silver', 'done', `${qualityScore}% quality`, `${silverCount} clean rows`);
+    const bs = document.getElementById('badge-silver');
+if(bs) { bs.textContent = `${silverCount} rows`; bs.className = 'nav-badge nb-green'; }
+	appendLog(log, 'warn', `  → Removed ${removed} problematic rows (nulls, dupes, negatives)`);
+    appendLog(log, 'ok',   `  ✓ Silver complete — ${silverCount} clean rows · quality: ${qualityScore}%`);
+
+    // Update Silver page quality display
+    document.getElementById('silver-quality-text').textContent = qualityScore + '%';
+    document.getElementById('home-quality').textContent = qualityScore + '%';
+    await sleep(600);
+
+    // ── STAGE 4: GOLD AGGREGATION ─────────────────────────────
+    // Aggregates Silver data into account-level totals and percentages
+    // This is what powers drift detection and reporting
+    setStage('gold', 'running', 'Aggregating...', '');
+    appendLog(log, 'info', 'STAGE 4: Gold Layer Aggregation');
+    appendLog(log, 'sql',  '  → Running: SUM(market_value) per account...');
+    appendLog(log, 'sql',  '  → Running: Calculating allocation percentages...');
+    await sleep(700);
+
+    // Real Gold aggregation SQL
+    // Calculates what % of each portfolio each asset class represents
+    db.run(`
+      INSERT INTO gold_portfolio (account_id, platform, asset_class, market_value, total_portfolio, allocation_pct)
+      SELECT
+        s.account_id,
+        a.platform,
+        s.asset_class,
+        ROUND(SUM(s.market_value), 2) AS market_value,
+        ROUND(totals.total_portfolio, 2) AS total_portfolio,
+        ROUND(SUM(s.market_value) * 100.0 / totals.total_portfolio, 2) AS allocation_pct
+      FROM silver_holdings s
+      JOIN account_info a ON s.account_id = a.account_id
+      JOIN (
+        SELECT account_id, SUM(market_value) AS total_portfolio
+        FROM silver_holdings
+        GROUP BY account_id
+      ) totals ON s.account_id = totals.account_id
+      GROUP BY s.account_id, s.asset_class
+    `);
+
+    const gResult = db.exec('SELECT COUNT(*) FROM gold_portfolio');
+    goldCount = gResult[0].values[0][0];
+    setStage('gold', 'done', 'Aggregated', `${goldCount} rows`);
+    const bg = document.getElementById('badge-gold');
+if(bg) { bg.textContent = `${goldCount} rows`; bg.className = 'nav-badge nb-blue'; }
+    appendLog(log, 'ok',   `  ✓ Gold complete — ${goldCount} aggregated rows with allocation percentages`);
+    await sleep(500);
+
+    // ── STAGE 5: DRIFT DETECTION ──────────────────────────────
+    setStage('drift', 'running', 'Detecting...', '');
+    appendLog(log, 'info', 'STAGE 5: Drift Detection');
+    appendLog(log, 'sql',  '  → JOIN gold_portfolio WITH target_allocation...');
+    appendLog(log, 'sql',  '  → Calculating: current_pct - target_pct...');
+    await sleep(600);
+
+    driftResults = runDrift();
+
+    const urgent = driftResults.filter(r => r.status === 'URGENT').length;
+    const rebal  = driftResults.filter(r => r.status === 'REBALANCE').length;
+    const onTarget = driftResults.filter(r => r.status === 'ON TARGET').length;
+
+    setStage('drift', 'done', 'Complete', `${urgent+rebal} need action`);
+    document.getElementById('badge-drift').textContent = `${urgent+rebal} alerts`;
+    document.getElementById('badge-drift').className = urgent > 0 ? 'nav-badge nb-red' : 'nav-badge nb-gold';
+
+    appendLog(log, 'warn', `  → ${urgent} URGENT accounts (drift > 10%)`);
+    appendLog(log, 'warn', `  → ${rebal} accounts need rebalancing (drift > 5%)`);
+    appendLog(log, 'ok',   `  → ${onTarget} accounts on target`);
+    appendLog(log, 'ok',   `  ✓ Drift detection complete`);
+
+    await sleep(300);
+    appendLog(log, 'time', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    appendLog(log, 'ok',   `✅ Pipeline complete! All 5 stages successful.`);
+    appendLog(log, 'ai',   `🤖 Claude AI context loaded — go to Portfolio AI to ask questions`);
+
+    // Update all the UI elements now that data is available
+    pipelineRan = true;
+    updateAllUI(urgent, rebal, onTarget, qualityScore);
+    renderAllTables();
+    loadAIContext();
+
+    setStatus('ready', '✅ Pipeline complete');
+
+  } catch(err) {
+    appendLog(log, 'err', `❌ Pipeline error: ${err.message}`);
+    setStatus('loading', '❌ Error: ' + err.message);
+    console.error(err);
+  }
+
+  document.getElementById('run-btn').disabled = false;
+  document.getElementById('reset-btn').disabled = false;
+}
+
+// ============================================================
+// SECTION 6: DRIFT DETECTION
+// Runs the actual SQL comparing current vs target allocation
+// Returns results that get stored for Claude to read
+// ============================================================
+function runDrift() {
+  if(!db) return [];
+
+  const result = db.exec(`
+    WITH drift_calc AS (
+      SELECT
+        g.account_id,
+        a.client_name,
+        g.platform,
+        g.asset_class,
+        ROUND(g.allocation_pct, 2)       AS current_pct,
+        ROUND(t.target_pct, 2)           AS target_pct,
+        ROUND(g.allocation_pct - t.target_pct, 2) AS drift_pct,
+        ABS(g.allocation_pct - t.target_pct)       AS abs_drift,
+        ROUND(g.market_value, 2)         AS market_value,
+        ROUND(g.total_portfolio, 2)      AS total_portfolio
+      FROM  gold_portfolio g
+      JOIN  target_allocation t
+        ON  g.account_id  = t.account_id
+        AND g.asset_class = t.asset_class
+      JOIN  account_info a
+        ON  g.account_id  = a.account_id
+    )
+    SELECT *,
+      CASE
+        WHEN abs_drift > 10 THEN 'URGENT'
+        WHEN abs_drift > 5  THEN 'REBALANCE'
+        ELSE                     'ON TARGET'
+      END AS status
+    FROM  drift_calc
+    ORDER BY abs_drift DESC
+  `);
+
+  if(!result.length) return [];
+
+  const cols = result[0].columns;
+  return result[0].values.map(row => {
+    const obj = {};
+    cols.forEach((c,i) => obj[c] = row[i]);
+    return obj;
+  });
+}
+
+// ============================================================
+// SECTION 7: RENDER TABLES
+// Populates Bronze, Silver, Gold pages with real data
+// ============================================================
+function renderAllTables() {
+  renderBronze();
+  renderSilver();
+  renderGold();
+  renderDriftTable();
+  updatePipelineResults();
+}
+
+function renderBronze() {
+  const result = db.exec(`
+    SELECT account_id, asset_class, market_value, date, source
+    FROM bronze_holdings LIMIT 30
+  `);
+  if(!result.length) return;
+
+  const tbody = document.getElementById('bronze-tbody');
+  tbody.innerHTML = '';
+  document.getElementById('bronze-sub').textContent = `// ${bronzeCount} raw rows from SSIS`;
+  document.getElementById('bronze-badge').textContent = `${bronzeCount} rows`;
+
+  result[0].values.forEach(row => {
+    const [acct, ac, mv, dt, src] = row;
+
+    // Detect issues to highlight
+    let issue = '';
+    let rowStyle = '';
+    if(!acct || acct.trim() === '') {
+      issue = '❌ Missing account_id';
+      rowStyle = 'background:#fff0f0';
+    } else if(acct !== acct.toUpperCase().trim()) {
+      issue = '⚠️ Lowercase / spaces';
+      rowStyle = 'background:#fffbf0';
+    } else if(mv === null || mv === undefined) {
+      issue = '❌ NULL market value';
+      rowStyle = 'background:#fff0f0';
+    } else if(mv < 0) {
+      issue = '❌ Negative value';
+      rowStyle = 'background:#fff0f0';
+    } else if(!dt) {
+      issue = '❌ Missing date';
+      rowStyle = 'background:#fff0f0';
+    } else {
+      issue = '✅ Valid';
+      rowStyle = '';
+    }
+
+    const tr = document.createElement('tr');
+    tr.style.cssText = rowStyle;
+    tr.innerHTML = `
+      <td class="mono">${acct ?? '<span style="color:var(--red)">NULL</span>'}</td>
+      <td>${ac ?? '—'}</td>
+      <td class="mono">${mv !== null && mv !== undefined ? '$'+Number(mv).toLocaleString() : '<span style="color:var(--red)">NULL</span>'}</td>
+      <td class="mono">${dt ?? '<span style="color:var(--red)">NULL</span>'}</td>
+      <td class="mono">${src ?? 'SSIS'}</td>
+      <td style="font-size:11px">${issue}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderSilver() {
+  const result = db.exec('SELECT account_id, asset_class, market_value, date, layer FROM silver_holdings LIMIT 30');
+  if(!result.length) return;
+
+  const tbody = document.getElementById('silver-tbody');
+  tbody.innerHTML = '';
+  document.getElementById('silver-sub').textContent = `// ${silverCount} clean rows after transformation`;
+  document.getElementById('silver-badge').textContent = `${silverCount} rows`;
+
+  result[0].values.forEach(row => {
+    const [acct, ac, mv, dt, layer] = row;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="mono" style="color:var(--green)">${acct}</td>
+      <td>${ac}</td>
+      <td class="mono">$${Number(mv).toLocaleString()}</td>
+      <td class="mono">${dt}</td>
+      <td><span class="badge b-blue">${layer}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Quality metrics
+  const removed = bronzeCount - silverCount;
+  const q = ((silverCount/bronzeCount)*100).toFixed(1);
+  document.getElementById('silver-quality-box').innerHTML = `
+    <div class="stat-row"><span class="stat-key">Null account_ids removed</span><span class="stat-val" style="color:var(--green)">✓ Done</span></div>
+    <div class="stat-row"><span class="stat-key">Duplicates removed</span><span class="stat-val" style="color:var(--green)">✓ Done</span></div>
+    <div class="stat-row"><span class="stat-key">Negative values removed</span><span class="stat-val" style="color:var(--green)">✓ Done</span></div>
+    <div class="stat-row"><span class="stat-key">Account IDs standardized</span><span class="stat-val" style="color:var(--green)">✓ UPPER(TRIM())</span></div>
+    <div class="stat-row"><span class="stat-key">Market values rounded</span><span class="stat-val" style="color:var(--green)">✓ ROUND(2)</span></div>
+    <div class="stat-row"><span class="stat-key">Quality score</span><span class="stat-val" style="color:var(--green)">${q}%</span></div>
+  `;
+  document.getElementById('silver-compare-box').innerHTML = `
+    <div class="stat-row"><span class="stat-key">Bronze rows (raw)</span><span class="stat-val">${bronzeCount}</span></div>
+    <div class="stat-row"><span class="stat-key">Silver rows (clean)</span><span class="stat-val" style="color:var(--green)">${silverCount}</span></div>
+    <div class="stat-row"><span class="stat-key">Rows removed</span><span class="stat-val" style="color:var(--amber)">${removed} (${(removed/bronzeCount*100).toFixed(0)}%)</span></div>
+    <div class="stat-row"><span class="stat-key">Reconciliation rate</span><span class="stat-val" style="color:var(--green)">${q}%</span></div>
+    <div class="stat-row"><span class="stat-key">Data quality</span><span class="stat-val" style="color:var(--green)">${q >= 75 ? '✓ Acceptable' : '⚠️ Below threshold'}</span></div>
+  `;
+}
+
+function renderGold() {
+  const result = db.exec(`
+    SELECT g.account_id, g.platform, g.asset_class,
+           g.market_value, g.total_portfolio, g.allocation_pct,
+           t.target_pct,
+           ROUND(g.allocation_pct - t.target_pct, 2) AS drift
+    FROM gold_portfolio g
+    JOIN target_allocation t
+      ON g.account_id = t.account_id
+      AND g.asset_class = t.asset_class
+    ORDER BY g.account_id, g.asset_class
+  `);
+  if(!result.length) return;
+
+  const tbody = document.getElementById('gold-tbody');
+  tbody.innerHTML = '';
+  document.getElementById('gold-sub').textContent = `// ${goldCount} aggregated rows — analytics ready`;
+  document.getElementById('gold-badge').textContent = `${goldCount} rows`;
+
+  result[0].values.forEach(row => {
+    const [acct, plat, ac, mv, total, alloc, target, drift] = row;
+    const driftColor = Math.abs(drift) > 10 ? 'var(--red)' : Math.abs(drift) > 5 ? 'var(--amber)' : 'var(--green)';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="mono">${acct}</td>
+      <td><span class="badge b-navy" style="font-size:10px">${plat}</span></td>
+      <td>${ac}</td>
+      <td class="mono">$${Number(mv).toLocaleString()}</td>
+      <td class="mono">$${Number(total).toLocaleString()}</td>
+      <td class="mono">${alloc}%</td>
+      <td class="mono">${target}%</td>
+      <td class="mono" style="color:${driftColor};font-weight:600">${drift > 0 ? '+' : ''}${drift}%</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderDriftTable() {
+  if(!driftResults.length) return;
+
+  const drifted   = driftResults.filter(r => r.status !== 'ON TARGET');
+  const onTarget  = driftResults.filter(r => r.status === 'ON TARGET');
+  const urgent    = driftResults.filter(r => r.status === 'URGENT');
+  const maxDrift  = Math.max(...driftResults.map(r => Math.abs(r.drift_pct)));
+
+  // Update metrics
+  document.getElementById('d-drifted').textContent  = drifted.length;
+  document.getElementById('d-ontarget').textContent = onTarget.length;
+  document.getElementById('d-max').textContent      = maxDrift.toFixed(1) + '%';
+  document.getElementById('d-urgent').textContent   = urgent.length;
+
+  // Build the results table
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Account</th>
+          <th>Client</th>
+          <th>Platform</th>
+          <th>Asset Class</th>
+          <th>Current %</th>
+          <th>Target %</th>
+          <th>Drift</th>
+          <th>Visual</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  driftResults.forEach(r => {
+    const abs = Math.abs(r.drift_pct);
+    const barPct = Math.min(abs / 15 * 100, 100);
+    const barColor = r.status === 'URGENT' ? 'var(--red)' : r.status === 'REBALANCE' ? 'var(--gold)' : 'var(--green)';
+    const driftColor = r.drift_pct > 0 ? 'var(--red)' : r.drift_pct < 0 ? 'var(--blue)' : 'var(--muted)';
+    const badgeClass = r.status === 'URGENT' ? 'b-red' : r.status === 'REBALANCE' ? 'b-gold' : 'b-green';
+    const statusIcon = r.status === 'URGENT' ? '🔴' : r.status === 'REBALANCE' ? '🟡' : '🟢';
+
+    html += `
+      <tr>
+        <td class="mono">${r.account_id}</td>
+        <td>${r.client_name}</td>
+        <td style="font-size:11px">${r.platform}</td>
+        <td>${r.asset_class}</td>
+        <td class="mono">${r.current_pct}%</td>
+        <td class="mono">${r.target_pct}%</td>
+        <td class="mono" style="color:${driftColor};font-weight:600">
+          ${r.drift_pct > 0 ? '+' : ''}${r.drift_pct}%
+        </td>
+        <td style="min-width:100px">
+          <div class="drift-bar-wrap">
+            <div class="drift-track">
+              <div class="drift-fill" style="width:${barPct}%;background:${barColor}"></div>
+            </div>
+            <span class="drift-num" style="color:${barColor}">${abs.toFixed(1)}%</span>
+          </div>
+        </td>
+        <td><span class="badge ${badgeClass}">${statusIcon} ${r.status}</span></td>
+      </tr>
+    `;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('drift-table-wrap').innerHTML = html;
+}
+
+function updatePipelineResults() {
+  const q = ((silverCount/bronzeCount)*100).toFixed(1);
+  document.getElementById('pipeline-results').innerHTML = `
+    <div class="stat-row"><span class="stat-key">SSIS rows extracted</span><span class="stat-val">${bronzeCount}</span></div>
+    <div class="stat-row"><span class="stat-key">Bronze rows loaded</span><span class="stat-val">${bronzeCount}</span></div>
+    <div class="stat-row"><span class="stat-key">Silver rows (clean)</span><span class="stat-val" style="color:var(--green)">${silverCount}</span></div>
+    <div class="stat-row"><span class="stat-key">Rows removed (quality)</span><span class="stat-val" style="color:var(--amber)">${bronzeCount-silverCount}</span></div>
+    <div class="stat-row"><span class="stat-key">Gold rows (aggregated)</span><span class="stat-val" style="color:var(--blue)">${goldCount}</span></div>
+    <div class="stat-row"><span class="stat-key">Silver quality score</span><span class="stat-val" style="color:var(--green)">${q}%</span></div>
+    <div class="stat-row"><span class="stat-key">Drift alerts generated</span><span class="stat-val" style="color:var(--red)">${driftResults.filter(r=>r.status!=='ON TARGET').length}</span></div>
+    <div class="stat-row"><span class="stat-key">Urgent accounts</span><span class="stat-val" style="color:var(--red)">${driftResults.filter(r=>r.status==='URGENT').length}</span></div>
+  `;
+}
+
+// ============================================================
+// SECTION 8: UPDATE UI AFTER PIPELINE
+// Updates home page metrics, platform table, badges
+// ============================================================
+function updateAllUI(urgent, rebal, onTarget, q) {
+  // Home page metrics
+  document.getElementById('home-drift-count').textContent = urgent + rebal;
+  document.getElementById('home-drift-sub').textContent = `${urgent} urgent · ${rebal} need rebalancing`;
+  document.getElementById('home-pipe-status').textContent = 'Done';
+  document.getElementById('home-pipe-sub').textContent = `${bronzeCount}→${silverCount}→${goldCount} rows`;
+
+  // Platform drift counts
+  const platforms = { Advantage: 0, 'Tactical Allocation': 0, 'Diversified Income': 0, 'Fixed Income': 0 };
+  driftResults.filter(r => r.status !== 'ON TARGET').forEach(r => {
+    if(platforms.hasOwnProperty(r.platform)) platforms[r.platform]++;
+  });
+
+  const adv = platforms['Advantage'];
+  const tac = platforms['Tactical Allocation'];
+  const div = platforms['Diversified Income'];
+  const fi  = platforms['Fixed Income'];
+
+  document.getElementById('pt-adv').textContent = adv + ' alerts';
+  document.getElementById('pt-tac').textContent = tac + ' alerts';
+  document.getElementById('pt-div').textContent = div + ' alerts';
+  document.getElementById('pt-fi').textContent  = fi  + ' alerts';
+
+  document.getElementById('pt-adv-s').outerHTML = `<span class="badge ${adv>0?'b-red':'b-green'}" id="pt-adv-s">${adv>0?'Attention':'Healthy'}</span>`;
+  document.getElementById('pt-tac-s').outerHTML = `<span class="badge ${tac>0?'b-red':'b-green'}" id="pt-tac-s">${tac>0?'Attention':'Healthy'}</span>`;
+  document.getElementById('pt-div-s').outerHTML = `<span class="badge ${div>0?'b-red':'b-green'}" id="pt-div-s">${div>0?'Attention':'Healthy'}</span>`;
+  document.getElementById('pt-fi-s').outerHTML  = `<span class="badge ${fi>0?'b-red':'b-green'}"  id="pt-fi-s">${fi>0?'Attention':'Healthy'}</span>`;
+
+  const bp = document.getElementById('badge-pipeline');
+if(bp) { bp.textContent = 'DONE'; bp.className = 'nav-badge nb-green'; }
+}
+
+// ============================================================
+// SECTION 9: CLAUDE AI INTEGRATION
+// Sends real drift results to Claude and renders the response
+// This is the actual Anthropic API call
+// ============================================================
+function loadAIContext() {
+  if(!driftResults.length) return;
+
+  const urgent  = driftResults.filter(r => r.status === 'URGENT');
+  const rebal   = driftResults.filter(r => r.status === 'REBALANCE');
+  const ok      = driftResults.filter(r => r.status === 'ON TARGET');
+
+  document.getElementById('ai-context-label').textContent =
+    `// ${driftResults.length} drift results loaded · ${urgent.length} urgent · ${rebal.length} rebalance`;
+
+  document.getElementById('ai-context-box').innerHTML = `
+    <div class="stat-row"><span class="stat-key">Total rows loaded</span><span class="stat-val">${driftResults.length}</span></div>
+    <div class="stat-row"><span class="stat-key">Urgent accounts</span><span class="stat-val" style="color:var(--red)">${urgent.length}</span></div>
+    <div class="stat-row"><span class="stat-key">Need rebalancing</span><span class="stat-val" style="color:var(--amber)">${rebal.length}</span></div>
+    <div class="stat-row"><span class="stat-key">On target</span><span class="stat-val" style="color:var(--green)">${ok.length}</span></div>
+    <div class="stat-row"><span class="stat-key">Data source</span><span class="stat-val">Gold layer (SQL)</span></div>
+    <div class="stat-row"><span class="stat-key">Context status</span><span class="stat-val" style="color:var(--green)">✅ Loaded</span></div>
+  `;
+
+  // Auto-generate morning briefing
+  setTimeout(() => {
+    askQuick('Write a concise morning briefing for the Probity Advisors portfolio management team based on today\'s drift detection results. Be specific about which accounts need action and why. Format it professionally.');
+  }, 500);
+}
+
+// Builds the context string we send to Claude
+// This is what makes Claude's responses specific to Probity's real data
+function buildContext() {
+  const urgent = driftResults.filter(r => r.status === 'URGENT');
+  const rebal  = driftResults.filter(r => r.status === 'REBALANCE');
+  const ok     = driftResults.filter(r => r.status === 'ON TARGET');
+
+  let ctx = `You are a senior portfolio analyst at Probity Advisors, Inc. — a registered investment advisory firm in Dallas, TX managing $730M AUM across 1,061 client accounts and 4 investment platforms (Advantage min $250K, Tactical Allocation min $10K, Diversified Income min $250K, Fixed Income min $100K).
+
+Today's drift detection pipeline has just completed. Here are the REAL results from the Gold layer database:
+
+URGENT ACCOUNTS (drift >10% — immediate action required):
+`;
+
+  if(urgent.length) {
+    urgent.forEach(r => {
+      ctx += `- ${r.account_id} (${r.client_name}, ${r.platform}): ${r.asset_class} at ${r.current_pct}% vs ${r.target_pct}% target = ${r.drift_pct > 0 ? '+' : ''}${r.drift_pct}% drift. Portfolio value: $${Number(r.total_portfolio).toLocaleString()}\n`;
+    });
+  } else {
+    ctx += '- None today\n';
+  }
+
+  ctx += `\nACCOUNTS NEEDING REBALANCING (drift 5-10%):
+`;
+  if(rebal.length) {
+    rebal.forEach(r => {
+      ctx += `- ${r.account_id} (${r.client_name}, ${r.platform}): ${r.asset_class} at ${r.current_pct}% vs ${r.target_pct}% target = ${r.drift_pct > 0 ? '+' : ''}${r.drift_pct}% drift\n`;
+    });
+  } else {
+    ctx += '- None today\n';
+  }
+
+  ctx += `\nACCOUNTS ON TARGET (${ok.length} total): All within ±5% of their target allocation.\n`;
+  ctx += `\nPIPELINE STATS: Bronze ${bronzeCount} rows → Silver ${silverCount} rows (${((silverCount/bronzeCount)*100).toFixed(1)}% quality) → Gold ${goldCount} rows\n`;
+  ctx += `\nAnswer questions about this data concisely and professionally. Be specific with numbers. Recommend specific actions when asked.`;
+
+  return ctx;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const question = input.value.trim();
+  if(!question) return;
+  input.value = '';
+  await askClaude(question);
+}
+
+async function askQuick(question) {
+  await askClaude(question);
+}
+
+async function askClaude(question) {
+  const messages = document.getElementById('chat-messages');
+
+  // Add user message to chat
+  const userDiv = document.createElement('div');
+  userDiv.className = 'msg msg-user';
+  userDiv.innerHTML = `
+    <div class="msg-avatar">JS</div>
+    <div class="msg-content">
+      <div class="msg-label">YOU</div>
+      <div class="msg-bubble">${question}</div>
+    </div>
+  `;
+  messages.appendChild(userDiv);
+
+  // Add typing indicator
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'msg msg-ai';
+  typingDiv.innerHTML = `
+    <div class="msg-avatar">🤖</div>
+    <div class="msg-content">
+      <div class="msg-label">PORTFOLIO AI · CLAUDE</div>
+      <div class="msg-bubble">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  `;
+  messages.appendChild(typingDiv);
+  messages.scrollTop = messages.scrollHeight;
+
+  // Disable input while Claude responds
+  document.getElementById('chat-input').disabled = true;
+  document.getElementById('send-btn').disabled = true;
+
+  try {
+    // Build the messages array for Claude API
+    // We include the real pipeline context so Claude knows the actual data
+    const systemPrompt = pipelineRan ? buildContext() :
+      'You are a portfolio analyst at Probity Advisors, Inc. in Dallas, TX. The pipeline has not been run yet — encourage the user to run the pipeline first to load real data. You can still answer general questions about portfolio management and drift detection.';
+
+    // Call the Claude API
+    const response = await fetch('/api/claude', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    system: systemPrompt,
+    messages: [{ role: 'user', content: question }]
+  })
+});
+
+const data = await response.json();
+const reply = data.content?.[0]?.text || 'Sorry, could not generate a response.';
+    // Replace typing indicator with actual response
+    typingDiv.querySelector('.msg-bubble').innerHTML =
+      reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  } catch(err) {
+    typingDiv.querySelector('.msg-bubble').innerHTML =
+      `<span style="color:var(--red)">API error: ${err.message}. Please try again.</span>`;
+  }
+
+  // Re-enable input
+  document.getElementById('chat-input').disabled = false;
+  document.getElementById('send-btn').disabled = false;
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function clearChat() {
+  document.getElementById('chat-messages').innerHTML = `
+    <div class="msg msg-ai">
+      <div class="msg-avatar">🤖</div>
+      <div class="msg-content">
+        <div class="msg-label">PORTFOLIO AI · CLAUDE</div>
+        <div class="msg-bubble">Chat cleared. Ask me anything about the portfolio data.</div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// SECTION 10: UTILITIES
+// Helper functions used throughout the app
+// ============================================================
+
+// Navigation — shows the right page when sidebar item clicked
+function nav(pageName, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + pageName).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// Updates the status pill in the topbar
+function setStatus(type, text) {
+  const el = document.getElementById('sys-status');
+  el.className = 'status-pill status-' + type;
+  el.innerHTML = `<div class="live-dot ${type==='running'?'pulse':''}"></div><span>${text}</span>`;
+  document.getElementById('sys-status-text');
+}
+
+// Updates a pipeline stage's visual state
+function setStage(id, state, status, count) {
+  const stage = document.getElementById('stage-' + id);
+  stage.className = 'stage ' + state;
+  document.getElementById('ss-' + id).textContent = status;
+  if(count) document.getElementById('sc-' + id).textContent = count;
+}
+
+// Appends a colored line to the log terminal
+function appendLog(log, type, text) {
+  const span = document.createElement('span');
+  span.className = 'l-' + type;
+  span.textContent = text;
+  log.appendChild(span);
+  log.appendChild(document.createTextNode('\n'));
+  log.scrollTop = log.scrollHeight;
+}
+
+// Resets everything back to initial state
+function resetPipeline() {
+  if(!db) return;
+  db.run('DELETE FROM bronze_holdings');
+  db.run('DELETE FROM silver_holdings');
+  db.run('DELETE FROM gold_portfolio');
+
+  pipelineRan = false;
+  driftResults = [];
+  bronzeCount = silverCount = goldCount = 0;
+
+  ['ssis','bronze','silver','gold','drift'].forEach(s => {
+    setStage(s, 'waiting', s === 'ssis' ? 'On-premises' : s === 'bronze' ? 'Raw ingestion' : s === 'silver' ? 'Cleanse + validate' : s === 'gold' ? 'Aggregate' : 'SQL analysis', '');
+  });
+
+  document.getElementById('pipeline-log').innerHTML =
+    '<span class="l-info">// Pipeline reset. Ready to run again.</span>\n';
+
+  ['bronze','silver','gold'].forEach(l => {
+  const el = document.getElementById('badge-'+l);
+  if(el) { el.textContent = 'empty'; el.className = 'nav-badge nb-gray'; }
+});
+const bp2 = document.getElementById('badge-pipeline');
+if(bp2) { bp2.textContent = 'READY'; bp2.className = 'nav-badge nb-gold'; }
+
+  ['bronze-tbody','silver-tbody','gold-tbody'].forEach(id => {
+    document.getElementById(id).innerHTML = '<tr><td colspan="8"><div class="empty"><div class="empty-text">Run the pipeline to load data</div></div></td></tr>';
+  });
+
+  document.getElementById('drift-table-wrap').innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Run the pipeline first</div></div>';
+  document.getElementById('pipeline-results').innerHTML = '<div class="empty"><div class="empty-icon">⚙️</div><div class="empty-text">Run the pipeline to see results</div></div>';
+
+  setStatus('ready', '✅ Database ready');
+}
+
+// Simple promise-based sleep function for pipeline timing
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============================================================
+// STARTUP — runs when page loads
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('home-date').textContent =
+    new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+	const hour = new Date().getHours();
+const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+document.getElementById('greeting-text').textContent = greeting;
+  initDatabase();
+});
+</script>
+</body>
+</html>
