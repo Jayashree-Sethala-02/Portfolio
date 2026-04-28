@@ -1287,7 +1287,12 @@ function buildClientContext() {
   const info = db.exec(`SELECT client_name,platform,risk_profile FROM account_info WHERE account_id='${currentClientId}'`);
   if(!info.length) return buildFirmContext();
   const [name,platform,riskProfile] = info[0].values[0];
-  const portfolio = db.exec(`SELECT asset_class,allocation_pct,target_pct,market_value,total_portfolio FROM gold_portfolio WHERE account_id='${currentClientId}'`);
+  const portfolio = db.exec(`
+    SELECT g.asset_class, g.allocation_pct, t.target_pct, g.market_value, g.total_portfolio 
+    FROM gold_portfolio g
+    JOIN target_allocation t ON g.account_id = t.account_id AND g.asset_class = t.asset_class
+    WHERE g.account_id = '${currentClientId}'
+  `);
   const history = db.exec(`SELECT month,portfolio_value,sp500_value FROM gold_historical_performance WHERE account_id='${currentClientId}' ORDER BY month`);
   const clientDrift = driftResults.filter(r=>r.account_id===currentClientId);
 
