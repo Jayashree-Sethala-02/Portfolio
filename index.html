@@ -684,7 +684,7 @@ async function initDatabase() {
       CREATE TABLE IF NOT EXISTS account_info(account_id TEXT PRIMARY KEY,client_name TEXT NOT NULL,platform TEXT NOT NULL,risk_profile TEXT NOT NULL);
     `);
     seedReferenceData();
-    setStatus('ready','● Markets Open');
+    setStatus('ready',' Markets Open');
     const h = new Date().getHours();
     document.getElementById('greeting-text').textContent = h<12?'Good Morning':h<17?'Good Afternoon':'Good Evening';
     document.getElementById('home-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -865,7 +865,7 @@ async function runPipeline() {
     updateAllUI(urgent,rebal,onTarget,q);
     renderAllTables();
     loadAIContext();
-    setStatus('ready','● Markets Open');
+    setStatus('ready',' Markets Open');
 
   } catch(e) {
     appendLog(log,'err',`❌ Pipeline error: ${e.message}`);
@@ -1455,7 +1455,7 @@ function resetPipeline() {
   ['bronze-tbody','silver-tbody','gold-tbody'].forEach(id=>{document.getElementById(id).innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-text">Run the pipeline to load data</div></div></td></tr>';});
   document.getElementById('drift-table-wrap').innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Run the pipeline first</div></div>';
   document.getElementById('pipeline-results').innerHTML='<div class="empty"><div class="empty-icon">⚙️</div><div class="empty-text">Run the pipeline to see results</div></div>';
-  setStatus('ready','● Markets Open');
+  setStatus('ready',' Markets Open');
 }
 
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
